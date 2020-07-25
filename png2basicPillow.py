@@ -1,10 +1,15 @@
 from PIL import Image, ImageDraw
 import array as arr
 
-#function for sorting buckets of information
+
 def get_buckets_255(n):
+    """Take a value normalize it to one of 4 values to be used for a 16 bit colors
+
+    Args:
+        n is the input value
+
+    """
     bucket = 0
-    #print("filling bucket")
     if (n < 44):
         bucket = 0
     if (n > 43 and n < 128):
@@ -17,6 +22,15 @@ def get_buckets_255(n):
     return bucket
 
 def get_EGA16_Basic(red,green,blue):
+    """Convert an INT RDB value into a Hackaday Basic command
+
+    Args:
+        red: an int value for red limited for a 16 color pallet
+        green: an int value for green limited for a 16 color pallet
+        blue: an int value for blue limited for a 16 color pallet
+
+
+    """
     str_output = " color 0,0"        #making this default off
     if (red is 255 and green is 255 and blue is 255):
         str_output = " color 15,0"  #Bright White
@@ -55,9 +69,12 @@ original_png = 'hard_test.png'
 shrunk_png = 'hard_test_shrunk.png'
 basic_text = 'basic_06.txt'
 
+output_image_x = 64
+output_image_y = 64
+
 im = Image.open(original_png)
 rgb_im = im.convert('RGB')
-im_shrink = Image.new('RGB',(40,20))
+im_shrink = Image.new('RGB',(output_image_x,output_image_y))
 rgb_imDraw = ImageDraw.Draw(im_shrink)
 rgb_im_shrink = im_shrink.convert('RGB')
 
@@ -66,8 +83,8 @@ orig_x_end,orig_y_end = im.size
 print(orig_x_end)
 print(orig_y_end)
 #The Shrunk Image is 40x20px
-box_x_end = int(orig_x_end/40)
-box_y_end = int(orig_y_end/20)
+box_x_end = int(orig_x_end/output_image_x)
+box_y_end = int(orig_y_end/output_image_y)
 box_x_start = 0
 box_y_start = 0
 #Start at 0,0 read all the pixels. Average them.
@@ -93,7 +110,7 @@ place_holder = ''
 text_file = open(basic_text, "w")
 
 print("Start!")
-while( (y_new is not 19) and (x_new is not 40)):
+while( (y_new is not (output_image_y)) and (x_new is not output_image_x)):
     arr_r = arr.array('i')
     arr_g = arr.array('i')
     arr_b = arr.array('i')
@@ -108,8 +125,7 @@ while( (y_new is not 19) and (x_new is not 40)):
             arr_r.append(r)
             arr_g.append(g)
             arr_b.append(b)
-            #print(r, g, b)
-##    print(x,y)
+
     for a in range(0, len(arr_r)):
         red_average = red_average + arr_r[a]
     red_average = int(red_average/(len(arr_r)))
@@ -120,7 +136,7 @@ while( (y_new is not 19) and (x_new is not 40)):
         blue_average = blue_average + arr_b[a]
     blue_average = int(blue_average /(len(arr_b)))
     rgb_imDraw.point((x_new,y_new),(red_average,green_average,blue_average))
-    #rgb_imDraw.point((x_new,y_new),(85,85,85))
+
     im_shrink.save(shrunk_png,"PNG")
     r_temp = get_buckets_255(red_average)
     g_temp = get_buckets_255(green_average)
@@ -138,13 +154,11 @@ while( (y_new is not 19) and (x_new is not 40)):
     text_file.write(output_text)
     
     x_new = x_new + 1
-##    print("Ding")
-    if (x_new is 40):
+
+    if (x_new is output_image_x):
         x_new = 0
         y_new = y_new + 1
-##    print(x_new,y_new)
-##    print(box_x_start,box_x_end)
-##    print(box_y_start,box_y_end)
+
     box_x_start = box_x_start + box_x_step_size
     box_x_end = box_x_end + box_x_step_size
     if (box_x_end > orig_x_end):
@@ -163,20 +177,6 @@ im_shrink.close()
 im_shrink = Image.open(shrunk_png)
 rgb_im_shrink = im_shrink.convert('RGB')
 
-##print("making basic")
-##for y in range(0,20):
-##    for x in range(0,40):
-##        r, g, b = rgb_im.getpixel((x, y))
-##        #print("input",r,g,b)
-##        r_temp = get_buckets_255(r)
-##        g_temp = get_buckets_255(g)
-##        b_temp = get_buckets_255(b)
-##        #print("temps",r_temp,g_temp,b_temp)
-##        output_text = get_EGA16_Basic(r_temp,g_temp,b_temp)
-##        count = count + 10
-##        output_text = str(count) + output_text +"\n"
-##        text_file.write(output_text)
-##print("basically over")
 text_file.close()
 '''
 Ok so what I need to do is look at the image size. Look at a field size
